@@ -32,7 +32,8 @@ class Character:
         self.name = name
         self.strength = Statistic("Strength", description="Strength is a measure of physical power.")
         self.intelligence = Statistic("Intelligence", description="Intelligence is a measure of cognitive ability.")
-        # Add more stats as needed
+        self.dexterity = Statistic("Dexterity", description="Skill in using technology and ancient tools.")
+        self.vitality = Statistic("Vitality", description="Health and resilience to survive through ages.")
 
     def __str__(self):
         return f"Character: {self.name}, Strength: {self.strength}, Intelligence: {self.intelligence}"
@@ -68,10 +69,11 @@ class Event:
             self.status = EventStatus.FAIL
             print(self.fail_message)
 
-
+# Time portal mechanic: selecting events from different eras
 class Location:
     def __init__(self, events: List[Event]):
         self.events = events
+        self.era = era
 
     def get_event(self) -> Event:
         return random.choice(self.events)
@@ -116,8 +118,8 @@ class UserInputParser:
         choice = int(self.parse("Enter the number of the stat to use: ")) - 1
         return stats[choice]
 
-
-def load_events_from_json(file_path: str) -> List[Event]:
+# Modify the event loader to include the era
+def load_events_from_json(file_path: str, era: str) -> List[Event]:
     with open(file_path, 'r') as file:
         data = json.load(file)
     return [Event(event_data) for event_data in data]
@@ -127,10 +129,16 @@ def start_game():
     parser = UserInputParser()
     characters = [Character(f"Character_{i}") for i in range(3)]
 
-    # Load events from the JSON file
-    events = load_events_from_json('project_code/location_events/location_1.json')
-
-    locations = [Location(events)]
+# Load events for different eras
+    future_events = load_events_from_json('location_events/future.json', "Futuristic City")
+    ancient_events = load_events_from_json('location_events/ancient.json', "Ancient Civilization")
+    medieval_events = load_events_from_json('location_events/medieval.json', "Medieval Fantasy")
+   
+    # Create locations based on time periods
+    locations = [Location("Futuristic City", future_events), 
+                 Location("Ancient Civilization", ancient_events),
+                 Location("Medieval Fantasy", medieval_events)]
+    
     game = Game(parser, characters, locations)
     game.start()
 
