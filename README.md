@@ -28,11 +28,21 @@ To run the example project, follow the steps below:
 ### Game Idea
 - Sci-fi World with multiple portals that either connect to futuristic cities, ancient civilizations or medieval fantasy. 
 - GOAL: Fix broken time stream & defeat the Temporal Warden blocking the final portal
+- To complete goal, players must collect 15 points (one for each portal).
 
+### Location
+- There will be a multitude of portals from different eras such as futuristic cities, ancient civilizations or medieval fantasy. 
+
+### Events
+- NPC Interaction: Can gain items or increase stats
+- Portal Monsters: One big monster to defeat in each portal that will give the players one point
+- Random events: Found treasure, items and ambushes
+- Temporal Warden: Final Boss 
 
 ### Game Flow
-- Each player will roll to determine their whether they have high, medium, low stats on each statistic (e.g strength, vitality, dexterity, etc) in addition to rolling for their class (mage, warrior, rogue). 
-- The game will prompt you to run, fight, flee, or negotiate each in-game event. 
+- Game Statistics: Each player will roll to determine their whether they have high, medium, low stats on each statistic (e.g strength, vitality, dexterity, etc) 
+- Character Classes: Players will roll for their class either mage, warrior, rogue, and time keeper
+- In-Game Options: The game will prompt you to run, fight, flee, or negotiate each in-game event. 
 - Turn-based Combat: Each player will get a chance to roll to determine the success of their attacks.
 - Follow the instructions displayed in the terminal to play through the game.
 
