@@ -25,9 +25,15 @@ To run the example project, follow the steps below:
    python project_code/src/main.py
    ```
 
-### Game Flow
+### Game Idea
+- Sci-fi World with multiple portals that either connect to futuristic cities, ancient civilizations or medieval fantasy. 
+- GOAL: Fix broken time stream & defeat the Temporal Warden blocking the final portal
 
-- The game will prompt you to select a party member and choose a statistic (e.g., Strength or Intelligence) to resolve various in-game events.
+
+### Game Flow
+- Each player will roll to determine their whether they have high, medium, low stats on each statistic (e.g strength, vitality, dexterity, etc) in addition to rolling for their class (mage, warrior, rogue). 
+- The game will prompt you to run, fight, flee, or negotiate each in-game event. 
+- Turn-based Combat: Each player will get a chance to roll to determine the success of their attacks.
 - Follow the instructions displayed in the terminal to play through the game.
 
 ### Example
