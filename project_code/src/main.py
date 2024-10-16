@@ -52,11 +52,46 @@ class Event:
         self.partial_pass_message = data['partial_pass']['message']
         self.status = EventStatus.UNKNOWN
 
+class Event:
+    def __init__(self, data: dict):
+        self.primary_attribute = data['primary_attribute']
+        self.secondary_attribute = data['secondary_attribute']
+        self.prompt_text = data['prompt_text']
+        self.pass_message = data['pass']['message']
+        self.fail_message = data['fail']['message']
+        self.partial_pass_message = data['partial_pass']['message']
+        self.status = EventStatus.UNKNOWN
+
     def execute(self, party: List[Character], parser):
         print(self.prompt_text)
-        character = parser.select_party_member(party)
-        chosen_stat = parser.select_stat(character)
-        self.resolve_choice(character, chosen_stat)
+        action = parser.select_action()  # New method to select the player's action**
+        if action == "Run":
+            print("You decided to run. Event avoided!")
+            self.status = EventStatus.UNKNOWN  # Neutral outcome**
+        elif action == "Fight":
+            character = parser.select_party_member(party)
+            chosen_stat = parser.select_stat(character)
+            self.resolve_choice(character, chosen_stat)
+        elif action == "Flee":
+            print("You attempted to flee!")
+            if random.random() > 0.5:
+                print("You successfully escaped!")
+                self.status = EventStatus.UNKNOWN
+            else:
+                print("You failed to escape and must face the challenge.")
+                character = parser.select_party_member(party)
+                chosen_stat = parser.select_stat(character)
+                self.resolve_choice(character, chosen_stat)
+        elif action == "Negotiate":
+            print("You attempted to negotiate.")
+            if random.random() > 0.5:
+                print("Negotiation successful!")
+                self.status = EventStatus.PASS
+            else:
+                print("Negotiation failed. Prepare to face the event.")
+                character = parser.select_party_member(party)
+                chosen_stat = parser.select_stat(character)
+                self.resolve_choice(character, chosen_stat)
 
     def resolve_choice(self, character: Character, chosen_stat: Statistic):
         if chosen_stat.name == self.primary_attribute:
@@ -117,6 +152,14 @@ class UserInputParser:
             print(f"{idx + 1}. {stat.name} ({stat.value})")
         choice = int(self.parse("Enter the number of the stat to use: ")) - 1
         return stats[choice]
+
+    def select_action(self) -> str:  # New method to choose an action**
+        print("Choose an action:")
+        actions = ["Run", "Fight", "Flee", "Negotiate"]
+        for idx, action in enumerate(actions):
+            print(f"{idx + 1}. {action}")
+        choice = int(self.parse("Enter the number of your action: ")) - 1
+        return actions[choice]
 
 # Modify the event loader to include the era
 def load_events_from_json(file_path: str, era: str) -> List[Event]:
