@@ -30,13 +30,21 @@ class Statistic:
 class Character:
     def __init__(self, name: str = "Bob"):
         self.name = name
+        self.character_class = character_class
         self.strength = Statistic("Strength", description="Strength is a measure of physical power.")
         self.intelligence = Statistic("Intelligence", description="Intelligence is a measure of cognitive ability.")
         self.dexterity = Statistic("Dexterity", description="Skill in using technology and ancient tools.")
         self.vitality = Statistic("Vitality", description="Health and resilience to survive through ages.")
+        self.time_energy = Statistic("Time Energy", description="Ability to manipulate time.", min_value=0, max_value=50)
+
+            # Set class-specific attributes
+        self.set_class_attributes()
 
     def __str__(self):
-        return f"Character: {self.name}, Strength: {self.strength}, Intelligence: {self.intelligence}"
+        return (f"Character: {self.name}, Class: {self.character_class}, "
+                f"Strength: {self.strength}, Intelligence: {self.intelligence}, "
+                f"Dexterity: {self.dexterity}, Vitality: {self.vitality}, "
+                f"Time Energy: {self.time_energy}")
 
     def get_stats(self):
         return [self.strength, self.intelligence]  # Extend this list if there are more stats
