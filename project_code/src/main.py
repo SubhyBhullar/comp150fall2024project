@@ -46,6 +46,21 @@ class Character:
                 f"Dexterity: {self.dexterity}, Vitality: {self.vitality}, "
                 f"Time Energy: {self.time_energy}")
 
+    def set_class_attributes(self):
+        """Adjust character stats based on class selection."""
+        if self.character_class == "Mage":
+            self.intelligence.modify(20)  # Mages are highly intelligent
+            self.time_energy.modify(10)  # Ability to use more time energy
+        elif self.character_class == "Warrior":
+            self.strength.modify(25)  # Warriors have high strength
+            self.vitality.modify(15)  # Warriors are more resilient
+        elif self.character_class == "Rogue":
+            self.dexterity.modify(20)  # Rogues excel in stealth and agility
+            self.strength.modify(10)   # Adequate strength for combat
+        elif self.character_class == "Time Keeper":
+            self.intelligence.modify(15)
+            self.time_energy.modify(25)  # Time Keepers focus on manipulating time
+
     def get_stats(self):
         return [self.strength, self.intelligence]  # Extend this list if there are more stats
 
