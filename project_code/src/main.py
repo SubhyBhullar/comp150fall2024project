@@ -62,7 +62,13 @@ class Character:
             self.time_energy.modify(25)  # Time Keepers focus on manipulating time
 
     def get_stats(self):
-        return [self.strength, self.intelligence]  # Extend this list if there are more stats
+        return [self.strength, self.intelligence, self.dexterity, self.vitality, self.time_energy]
+
+    def modify_stat(self, stat_name: str, amount: int):
+        """Modify a specific stat by name."""
+        stats = {stat.name: stat for stat in self.get_stats()}
+        if stat_name in stats:
+            stats[stat_name].modify(amount)
 
 
 class Event:
