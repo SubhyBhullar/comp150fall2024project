@@ -106,9 +106,9 @@ class Event:
 
 # Time portal mechanic: selecting events from different eras
 class Location:
-    def __init__(self, events: List[Event]):
+    def __init__(self, era: str, events: List[Event]):
+        self.era = era 
         self.events = events
-        self.era = era
 
     def get_event(self) -> Event:
         return random.choice(self.events)
@@ -162,7 +162,7 @@ class UserInputParser:
         return actions[choice]
 
 # Modify the event loader to include the era
-def load_events_from_json(file_path: str, era: str) -> List[Event]:
+def load_events_from_json(file_path: str) -> List[Event]:
     with open(file_path, 'r') as file:
         data = json.load(file)
     return [Event(event_data) for event_data in data]
