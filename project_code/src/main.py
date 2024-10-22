@@ -147,6 +147,25 @@ class Event:
         else:
             self.status = EventStatus.FAIL
             print(self.fail_message)
+            # Apply damage to the character if they fail
+            character.take_damage(10)
+
+# Inventory System
+class Inventory:
+    def __init__(self):
+        self.items = []
+
+    def add_item(self, item):
+        self.items.append(item)
+
+    def remove_item(self, item):
+        if item in self.items:
+            self.items.remove(item)
+
+    def __str__(self):
+        return ", ".join(self.items)
+
+
 
 # Time portal mechanic: selecting events from different eras
 class Location:
