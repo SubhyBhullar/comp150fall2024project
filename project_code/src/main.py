@@ -84,7 +84,36 @@ class Character:
         self.health -= amount
         if self.health <= 0:
             print(f"{self.name} has fallen!")
+            
+    def attack(self):
+        """Character attack method - success determined by dice roll."""
+        roll = random.randint(1, 20)  # Roll a 20-sided dice
+        if roll > 10:  # Success if roll > 10
+            damage = random.randint(5, 20)  # Random damage
+            print(f"{self.name} successfully attacks for {damage} damage!")
+            return damage
+        else:
+            print(f"{self.name}'s attack missed!")
+            return 0
 
+def combat(character1, character2):
+    """Simulate turn-based combat between two characters."""
+    print(f"Combat Start: {character1.name} vs {character2.name}")
+
+    while character1.health > 0 and character2.health > 0:
+        # Character 1 attacks
+        damage = character1.attack()
+        character2.take_damage(damage)
+        if character2.health <= 0:
+            print(f"{character2.name} has fallen! {character1.name} wins!")
+            break
+
+        # Character 2 attacks
+        damage = character2.attack()
+        character1.take_damage(damage)
+        if character1.health <= 0:
+            print(f"{character1.name} has fallen! {character2.name} wins!")
+            break
 
 class Event:
     def __init__(self, data: dict):
@@ -223,6 +252,10 @@ class UserInputParser:
             print(f"{idx + 1}. {action}")
         choice = int(self.parse("Enter the number of your action: ")) - 1
         return actions[choice]
+
+# Add dice roll for random events
+def roll_dice(sides: int = 20) -> int:
+    return random.randint(1, sides)
 
 # Modify the event loader to include the era
 def load_events_from_json(file_path: str, era: str) -> List[Event]:
