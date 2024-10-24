@@ -95,6 +95,24 @@ class Character:
         else:
             print(f"{self.name}'s attack missed!")
             return 0
+            
+    def add_to_inventory(self, item: str):
+        """Add an item to the character's inventory."""
+        self.inventory.append(item)
+        print(f"{item} added to {self.name}'s inventory.")
+
+    def use_item(self, item: str):
+        """Use an item from the inventory."""
+        if item in self.inventory:
+            self.inventory.remove(item)
+            if item == "Potion":
+                self.health += 20  # Potions heal 20 HP
+                print(f"{self.name} used a Potion and healed 20 HP!")
+            elif item == "Sword":
+                print(f"{self.name} equips a Sword, increasing attack damage!")
+        else:
+            print(f"{item} not found in {self.name}'s inventory.")
+            
 
 def combat(character1, character2):
     """Simulate turn-based combat between two characters."""
