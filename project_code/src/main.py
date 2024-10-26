@@ -35,7 +35,7 @@ class CharacterClass(Enum):
     
 
 class Character:
-    def __init__(self, name: str = "Bob"):
+    def __init__(self, name: str = "Bob",  character_class: CharacterClass = CharacterClass.WARRIOR):
         self.name = name
         self.character_class = character_class
         self.strength = Statistic("Strength", description="Strength is a measure of physical power.")
@@ -216,9 +216,9 @@ class Inventory:
 
 # Time portal mechanic: selecting events from different eras
 class Location:
-    def __init__(self, events: List[Event]):
-        self.events = events
+     def __init__(self, era: str, events: List[Event]):
         self.era = era
+        self.events = events
 
     def get_event(self) -> Event:
         return random.choice(self.events)
