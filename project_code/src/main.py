@@ -282,6 +282,120 @@ def load_events_from_json(file_path: str, era: str) -> List[Event]:
     return [Event(event_data) for event_data in data]
 
 
+
+# Define the Player class
+class Player:
+    def __init__(self, name, health, attack, defense, abilities):
+        self.name = name
+        self.health = health
+        self.attack = attack
+        self.defense = defense
+        self.abilities = abilities
+    
+    def take_damage(self, damage):
+        # Calculate the damage taken after applying defense
+        actual_damage = max(damage - self.defense, 0)
+        self.health -= actual_damage
+        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
+    
+    def use_ability(self, ability):
+        # Placeholder for ability usage logic
+        print(f"{self.name} uses {ability}!")
+    
+    def is_alive(self):
+        return self.health > 0
+
+# Define three player characters
+player_0 = Player(name="Character_0", health=100, attack=15, defense=10, abilities=["Slash", "Heal"])
+player_1 = Player(name="Character_1", health=120, attack=10, defense=12, abilities=["Shield Bash", "Charge"])
+player_2 = Player(name="Character_2", health=90, attack=20, defense=8, abilities=["Stealth Attack", "Dodge"])
+
+# Store characters in a list for selection
+players = [player_0, player_1, player_2]
+
+def choose_character():
+    print("Choose a party member:")
+    for idx, char in enumerate(players):
+        print(f"{idx + 1}. {char.name}")
+    choice = int(input("Enter the number of your choice: ")) - 1
+    return players[choice]
+
+
+
+# Define the FinalBoss class
+class FinalBoss:
+    def __init__(self, name="Chronos, Keeper of Time", health=300, attack_power=25, defense=15):
+        self.name = name
+        self.health = health
+        self.max_health = health
+        self.attack = attack
+        self.defense = defense
+        self.special_abilities = {
+            "Time Warp": {"damage": 35, "cooldown": 3},  # Causes additional damage, has cooldown
+            "Heal": {"healing": 30, "cooldown": 5}       # Heals itself, has cooldown
+        }
+        self.ability_cooldowns = {key: 0 for key in self.special_abilities}  # Tracks ability cooldowns
+    
+    def take_damage(self, damage):
+        # Calculate the damage taken after applying defense
+        actual_damage = max(damage - self.defense, 0)
+        self.health -= actual_damage
+        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
+    
+     def use_ability(self):
+        # Logic for boss to use special abilities if off cooldown
+        if self.ability_cooldowns["Time Warp"] == 0:
+            self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
+            return ("Time Warp", self.special_abilities["Time Warp"]["damage"])
+        elif self.ability_cooldowns["Heal"] == 0 and self.health < self.max_health * 0.5:
+            self.ability_cooldowns["Heal"] = self.special_abilities["Heal"]["cooldown"]
+            self.health = min(self.max_health, self.health + self.special_abilities["Heal"]["healing"])
+            return ("Heal", self.special_abilities["Heal"]["healing"])
+        return ("Basic Attack", self.attack())
+
+    def update_cooldowns(self):
+        for ability in self.ability_cooldowns:
+            if self.ability_cooldowns[ability] > 0:
+                self.ability_cooldowns[ability] -= 1
+
+    def is_alive(self):
+        return self.health > 0
+
+# Example of a powerful final boss
+final_boss = FinalBoss(name="Dark Overlord", health=200, attack=25, defense=15, abilities=["Meteor Strike", "Dark Shield"])
+
+# Basic boss battle setup
+def boss_battle(player, boss):
+    print(f"Boss Battle! {player.name} vs. {boss.name}")
+    while player.is_alive() and boss.is_alive():
+        # Player turn
+        ability = player.abilities[0]  # Assume player uses the first ability for simplicity
+        print(f"{player.name}'s turn!")
+        player.use_ability(ability)
+        boss.take_damage(player.attack)
+        
+        # Boss turn if still alive
+        if boss.is_alive():
+            boss_ability = boss.abilities[0]  # Boss also uses first ability for simplicity
+            print(f"{boss.name}'s turn!")
+            boss.use_ability(boss_ability)
+            player.take_damage(boss.attack)
+    
+    # Determine the outcome
+    if player.is_alive():
+        print(f"{player.name} has defeated {boss.name}!")
+    else:
+        print(f"{boss.name} has defeated {player.name}... Game Over!")
+
+# Example usage
+player_character = choose_character()
+boss_battle(player_character, final_boss)
+
+
+# Start the Boss Battle
+boss_battle(player, boss)
+
+
 def start_game():
     parser = UserInputParser()
     characters = [Character(f"Character_{i}") for i in range(3)]
