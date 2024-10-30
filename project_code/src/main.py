@@ -362,7 +362,7 @@ class FinalBoss:
         self.health -= actual_damage
         print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
     
-     def use_ability(self):
+    def use_ability(self):
         # Logic for boss to use special abilities if off cooldown
         if self.ability_cooldowns["Time Warp"] == 0:
             self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
@@ -451,7 +451,7 @@ def start_game():
                  Location("Medieval Fantasy", medieval_events, medieval_boss)]
 
     game = Game(parser, characters, locations)
-
+    game.start()
 
 if __name__ == '__main__':
     start_game()
