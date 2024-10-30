@@ -27,20 +27,111 @@ class Statistic:
         self.value = max(self.min_value, min(self.max_value, self.value + amount))
 
 
+class CharacterClass(Enum):
+    MAGE = "Mage"
+    WARRIOR = "Warrior"
+    ROGUE = "Rogue"
+    TIME_KEEPER = "Time Keeper"
+    
+
 class Character:
-    def __init__(self, name: str = "Bob"):
+    def __init__(self, name: str = "Bob",  character_class: CharacterClass = CharacterClass.WARRIOR):
         self.name = name
+        self.character_class = character_class
         self.strength = Statistic("Strength", description="Strength is a measure of physical power.")
         self.intelligence = Statistic("Intelligence", description="Intelligence is a measure of cognitive ability.")
         self.dexterity = Statistic("Dexterity", description="Skill in using technology and ancient tools.")
         self.vitality = Statistic("Vitality", description="Health and resilience to survive through ages.")
+        self.time_energy = Statistic("Time Energy", description="Ability to manipulate time.", min_value=0, max_value=50)
+        self.health = 100
+        self.inventory = []
+
+            # Set class-specific attributes
+        self.set_class_attributes()
 
     def __str__(self):
-        return f"Character: {self.name}, Strength: {self.strength}, Intelligence: {self.intelligence}"
+        return (f"Character: {self.name}, Class: {self.character_class}, "
+                f"Strength: {self.strength}, Intelligence: {self.intelligence}, "
+                f"Dexterity: {self.dexterity}, Vitality: {self.vitality}, "
+                f"Time Energy: {self.time_energy}")
+
+    def set_class_attributes(self):
+        """Adjust character stats based on class selection."""
+        if self.character_class == CharacterClass.MAGE:
+            self.intelligence.modify(20)  # Mages are highly intelligent
+            self.time_energy.modify(10)  # Ability to use more time energy
+        elif self.character_class == CharacterClass.WARRIOR:
+            self.strength.modify(25)  # Warriors have high strength
+            self.vitality.modify(15)  # Warriors are more resilient
+        elif self.character_class == CharacterClass.ROGUE:
+            self.dexterity.modify(20)  # Rogues excel in stealth and agility
+            self.strength.modify(10)   # Adequate strength for combat
+        elif self.character_class == CharacterClass.TIME_KEEPER:
+            self.intelligence.modify(15)
+            self.time_energy.modify(25)  # Time Keepers focus on manipulating time
 
     def get_stats(self):
         return [self.strength, self.intelligence, self.dexterity, self.vitality]  # Extend this list if there are more stats
 
+    def modify_stat(self, stat_name: str, amount: int):
+        """Modify a specific stat by name."""
+        stats = {stat.name: stat for stat in self.get_stats()}
+        if stat_name in stats:
+            stats[stat_name].modify(amount)
+
+    def take_damage(self, amount: int):
+        """Apply damage to the character."""
+        self.health -= amount
+        if self.health <= 0:
+            print(f"{self.name} has fallen!")
+            
+    def attack(self):
+        """Character attack method - success determined by dice roll."""
+        roll = random.randint(1, 20)  # Roll a 20-sided dice
+        if roll > 10:  # Success if roll > 10
+            damage = random.randint(5, 20)  # Random damage
+            print(f"{self.name} successfully attacks for {damage} damage!")
+            return damage
+        else:
+            print(f"{self.name}'s attack missed!")
+            return 0
+            
+    def add_to_inventory(self, item: str):
+        """Add an item to the character's inventory."""
+        self.inventory.append(item)
+        print(f"{item} added to {self.name}'s inventory.")
+
+    def use_item(self, item: str):
+        """Use an item from the inventory."""
+        if item in self.inventory:
+            self.inventory.remove(item)
+            if item == "Potion":
+                self.health += 20  # Potions heal 20 HP
+                print(f"{self.name} used a Potion and healed 20 HP!")
+            elif item == "Sword":
+                print(f"{self.name} equips a Sword, increasing attack damage!")
+        else:
+            print(f"{item} not found in {self.name}'s inventory.")
+            
+
+def combat(character1, character2):
+    """Simulate turn-based combat between two characters."""
+    print(f"Combat Start: {character1.name} vs {character2.name}")
+
+    while character1.health > 0 and character2.health > 0:
+        # Character 1 attacks
+        damage = character1.attack()
+        character2.take_damage(damage)
+        if character2.health <= 0:
+            print(f"{character2.name} has fallen! {character1.name} wins!")
+            break
+
+        # Character 2 attacks
+        damage = character2.attack()
+        character1.take_damage(damage)
+        if character1.health <= 0:
+            print(f"{character1.name} has fallen! {character2.name} wins!")
+            break
 
 class Event:
     def __init__(self, data: dict):
@@ -93,6 +184,25 @@ class Event:
         else:
             self.status = EventStatus.FAIL
             print(self.fail_message)
+            # Apply damage to the character if they fail
+            character.take_damage(10)
+
+# Inventory System
+class Inventory:
+    def __init__(self):
+        self.items = []
+
+    def add_item(self, item):
+        self.items.append(item)
+
+    def remove_item(self, item):
+        if item in self.items:
+            self.items.remove(item)
+
+    def __str__(self):
+        return ", ".join(self.items)
+
+
 
 class Boss(Event):
     def __init__(self, data: dict, reward: str):
@@ -181,11 +291,129 @@ class UserInputParser:
         choice = int(self.parse("Enter the number of your action: ")) - 1
         return actions[choice]
 
+# Add dice roll for random events
+def roll_dice(sides: int = 20) -> int:
+    return random.randint(1, sides)
+
 # Modify the event loader to include the era
 def load_events_from_json(file_path: str) -> List[Event]:
     with open(file_path, 'r') as file:
         data = json.load(file)
     return [Event(event_data) for event_data in data]
+
+
+
+# Define the Player class
+class Player:
+    def __init__(self, name, health, attack, defense, abilities):
+        self.name = name
+        self.health = health
+        self.attack = attack
+        self.defense = defense
+        self.abilities = abilities
+    
+    def take_damage(self, damage):
+        # Calculate the damage taken after applying defense
+        actual_damage = max(damage - self.defense, 0)
+        self.health -= actual_damage
+        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
+    
+    def use_ability(self, ability):
+        # Placeholder for ability usage logic
+        print(f"{self.name} uses {ability}!")
+    
+    def is_alive(self):
+        return self.health > 0
+
+# Define three player characters
+player_0 = Player(name="Character_0", health=100, attack=15, defense=10, abilities=["Slash", "Heal"])
+player_1 = Player(name="Character_1", health=120, attack=10, defense=12, abilities=["Shield Bash", "Charge"])
+player_2 = Player(name="Character_2", health=90, attack=20, defense=8, abilities=["Stealth Attack", "Dodge"])
+
+# Store characters in a list for selection
+players = [player_0, player_1, player_2]
+
+def choose_character():
+    print("Choose a party member:")
+    for idx, char in enumerate(players):
+        print(f"{idx + 1}. {char.name}")
+    choice = int(input("Enter the number of your choice: ")) - 1
+    return players[choice]
+
+
+
+# Define the FinalBoss class
+class FinalBoss:
+    def __init__(self, name="Chronos, Keeper of Time", health=300, attack_power=25, defense=15):
+        self.name = name
+        self.health = health
+        self.max_health = health
+        self.attack = attack
+        self.defense = defense
+        self.special_abilities = {
+            "Time Warp": {"damage": 35, "cooldown": 3},  # Causes additional damage, has cooldown
+            "Heal": {"healing": 30, "cooldown": 5}       # Heals itself, has cooldown
+        }
+        self.ability_cooldowns = {key: 0 for key in self.special_abilities}  # Tracks ability cooldowns
+    
+    def take_damage(self, damage):
+        # Calculate the damage taken after applying defense
+        actual_damage = max(damage - self.defense, 0)
+        self.health -= actual_damage
+        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
+    
+     def use_ability(self):
+        # Logic for boss to use special abilities if off cooldown
+        if self.ability_cooldowns["Time Warp"] == 0:
+            self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
+            return ("Time Warp", self.special_abilities["Time Warp"]["damage"])
+        elif self.ability_cooldowns["Heal"] == 0 and self.health < self.max_health * 0.5:
+            self.ability_cooldowns["Heal"] = self.special_abilities["Heal"]["cooldown"]
+            self.health = min(self.max_health, self.health + self.special_abilities["Heal"]["healing"])
+            return ("Heal", self.special_abilities["Heal"]["healing"])
+        return ("Basic Attack", self.attack())
+
+    def update_cooldowns(self):
+        for ability in self.ability_cooldowns:
+            if self.ability_cooldowns[ability] > 0:
+                self.ability_cooldowns[ability] -= 1
+
+    def is_alive(self):
+        return self.health > 0
+
+# Example of a powerful final boss
+final_boss = FinalBoss(name="Dark Overlord", health=200, attack=25, defense=15, abilities=["Meteor Strike", "Dark Shield"])
+
+# Basic boss battle setup
+def boss_battle(player, boss):
+    print(f"Boss Battle! {player.name} vs. {boss.name}")
+    while player.is_alive() and boss.is_alive():
+        # Player turn
+        ability = player.abilities[0]  # Assume player uses the first ability for simplicity
+        print(f"{player.name}'s turn!")
+        player.use_ability(ability)
+        boss.take_damage(player.attack)
+        
+        # Boss turn if still alive
+        if boss.is_alive():
+            boss_ability = boss.abilities[0]  # Boss also uses first ability for simplicity
+            print(f"{boss.name}'s turn!")
+            boss.use_ability(boss_ability)
+            player.take_damage(boss.attack)
+    
+    # Determine the outcome
+    if player.is_alive():
+        print(f"{player.name} has defeated {boss.name}!")
+    else:
+        print(f"{boss.name} has defeated {player.name}... Game Over!")
+
+# Example usage
+player_character = choose_character()
+boss_battle(player_character, final_boss)
+
+
+# Start the Boss Battle
+boss_battle(player, boss)
 
 
 def start_game():
