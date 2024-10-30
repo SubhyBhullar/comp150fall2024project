@@ -344,7 +344,7 @@ def choose_character():
 
 # Define the FinalBoss class
 class FinalBoss:
-    def __init__(self, name="Chronos, Keeper of Time", health=300, attack_power=25, defense=15):
+    def __init__(self, name="Dark Overlord", health=200, attack_power=25, defense=15):
         self.name = name
         self.health = health
         self.max_health = health
@@ -381,8 +381,6 @@ class FinalBoss:
     def is_alive(self):
         return self.health > 0
 
-# Example of a powerful final boss
-final_boss = FinalBoss(name="Dark Overlord", health=200, attack=25, defense=15, abilities=["Meteor Strike", "Dark Shield"])
 
 # Basic boss battle setup
 def boss_battle(player, boss):
