@@ -273,27 +273,45 @@ class UserInputParser:
         return input(prompt)
 
     def select_party_member(self, party: List[Character]) -> Character:
-        print("Choose a party member:")
-        for idx, member in enumerate(party):
-            print(f"{idx + 1}. {member.name}")
-        choice = int(self.parse("Enter the number of the chosen party member: ")) - 1
-        return party[choice]
+        while True:
+            for idx, member in enumerate(party):
+                print(f"{idx + 1}. {member.name}")
+            try:
+                choice = int(self.parse("Enter the number of the chosen party member: "))
+                if 0 < choice <= len(party):  # Ensure choice is positive
+                    return party[choice - 1]
+                print("Invalid choice. Please enter a valid number.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
 
     def select_stat(self, character: Character) -> Statistic:
         print(f"Choose a stat for {character.name}:")
         stats = character.get_stats()
-        for idx, stat in enumerate(stats):
-            print(f"{idx + 1}. {stat.name} ({stat.value})")
-        choice = int(self.parse("Enter the number of the stat to use: ")) - 1
-        return stats[choice]
+        while True:
+            for idx, stat in enumerate(stats):
+                print(f"{idx + 1}. {stat.name} ({stat.value})")
+            try:
+                choice = int(self.parse("Enter the number of the stat to use: "))
+                if 0 < choice <= len(stats):  # Ensure choice is valid
+                    return stats[choice - 1]
+                print("Invalid choice. Please enter a valid number.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
 
-    def select_action(self) -> str:  # New method to choose an action**
+    def select_action(self) -> str:
         print("Choose an action:")
         actions = ["Run", "Fight", "Flee", "Negotiate"]
-        for idx, action in enumerate(actions):
-            print(f"{idx + 1}. {action}")
-        choice = int(self.parse("Enter the number of your action: ")) - 1
-        return actions[choice]
+        while True:
+            for idx, action in enumerate(actions):
+                print(f"{idx + 1}. {action}")
+            try:
+                choice = int(self.parse("Enter the number of your action: "))
+                if 0 < choice <= len(actions):  # Ensure choice is valid
+                    return actions[choice - 1]
+                print("Invalid choice. Please enter a valid number.")
+            except ValueError:
+                print("Invalid input. Please enter a number.")
+
 
 # Add dice roll for random events
 def roll_dice(sides: int = 20) -> int:
