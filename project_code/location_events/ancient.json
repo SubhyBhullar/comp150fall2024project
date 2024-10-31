@@ -1,0 +1,15 @@
+{ "name": "Futuristic City",
+  "primary_attribute": "Intelligence",
+  "secondary_attribute": "Dexterity",
+  "prompt_text": "An ancient beast blocks the time portal.",
+  "pass": {
+    "message": "You outwit the beast and claim victory!"
+  },
+  "fail": {
+    "message": "The beast is too strong."
+  },
+  "partial_pass": {
+    "message": "The beast is momentarily deterred."
+  },
+  "reward": "Ancient Artifact"
+}

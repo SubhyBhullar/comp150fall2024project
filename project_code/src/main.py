@@ -3,7 +3,7 @@ import sys
 import random
 from typing import List, Optional
 from enum import Enum
-
+import os
 
 class EventStatus(Enum):
     UNKNOWN = "unknown"
@@ -135,6 +135,7 @@ def combat(character1, character2):
 
 class Event:
     def __init__(self, data: dict):
+        self.name = data["name"]
         self.primary_attribute = data['primary_attribute']
         self.secondary_attribute = data['secondary_attribute']
         self.prompt_text = data['prompt_text']
@@ -145,6 +146,7 @@ class Event:
 
     def execute(self, party: List[Character], parser):
         print(self.prompt_text)
+        # print("we got here")
         action = parser.select_action()  # New method to select the player's action**
         if action == "Run":
             print("You decided to run. Event avoided!")
@@ -205,9 +207,9 @@ class Inventory:
 
 
 class Boss(Event):
-    def __init__(self, data: dict, reward: str):
+    def __init__(self, data: dict):
         super().__init__(data)
-        self.reward = reward
+        self.reward = data['reward']
 
     def execute(self, party: List[Character], parser):
         print(f"Boss Encounter: {self.prompt_text}")
@@ -224,16 +226,14 @@ class Boss(Event):
     
 # Time portal mechanic: selecting events from different eras
 class Location:
-    def __init__(self, era: str, events: List[Event], boss: Optional[Boss] = None):
-        self.era = era 
-        self.events = events
-        self.boss = boss
+    def __init__(self, boss_event: Boss, era: str=""):
+        self.era = era
+        self.boss_event = boss_event
         self.boss_defeated = False
+        self.name = boss_event.name
 
     def get_event(self) -> Event:
-        if self.boss and not self.boss_defeated:
-            return self.boss
-        return random.choice(self.events)
+        return self.boss_event
 
     def defeat_boss(self):
         self.boss_defeated = True
@@ -250,9 +250,13 @@ class Game:
 
     def start(self):
         while self.continue_playing:
+
             location = random.choice(self.locations)
-            event = location.get_event()
+            # print("We got here?")
+            event: Event = location.get_event()
+            # print("We got here?")
             event.execute(self.party, self.parser)
+            # print("We got here?")
             if isinstance(event, Boss) and event.status == EventStatus.PASS:
                 self.time_machine_pieces.append(event.reward)
                 location.defeat_boss()
@@ -295,12 +299,12 @@ class UserInputParser:
 def roll_dice(sides: int = 20) -> int:
     return random.randint(1, sides)
 
-# Modify the event loader to include the era
-def load_events_from_json(file_path: str) -> List[Event]:
+
+def load_boss_from_json(file_name: str) -> Boss:
+    file_path = os.path.join(os.path.dirname(__file__), '..', 'location_events', file_name)
     with open(file_path, 'r') as file:
         data = json.load(file)
-    return [Event(event_data) for event_data in data]
-
+    return Boss(data)
 
 
 # Define the Player class
@@ -348,7 +352,7 @@ class FinalBoss:
         self.name = name
         self.health = health
         self.max_health = health
-        self.attack = attack
+        self.attack = attack_power
         self.defense = defense
         self.special_abilities = {
             "Time Warp": {"damage": 35, "cooldown": 3},  # Causes additional damage, has cooldown
@@ -366,12 +370,12 @@ class FinalBoss:
         # Logic for boss to use special abilities if off cooldown
         if self.ability_cooldowns["Time Warp"] == 0:
             self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
-            return ("Time Warp", self.special_abilities["Time Warp"]["damage"])
+            return "Time Warp", self.special_abilities["Time Warp"]["damage"]
         elif self.ability_cooldowns["Heal"] == 0 and self.health < self.max_health * 0.5:
             self.ability_cooldowns["Heal"] = self.special_abilities["Heal"]["cooldown"]
             self.health = min(self.max_health, self.health + self.special_abilities["Heal"]["healing"])
-            return ("Heal", self.special_abilities["Heal"]["healing"])
-        return ("Basic Attack", self.attack())
+            return "Heal", self.special_abilities["Heal"]["healing"]
+        return "Basic Attack", self.attack
 
     def update_cooldowns(self):
         for ability in self.ability_cooldowns:
@@ -405,48 +409,17 @@ def boss_battle(player, boss):
     else:
         print(f"{boss.name} has defeated {player.name}... Game Over!")
 
-# Example usage
-player_character = choose_character()
-boss_battle(player_character, final_boss)
-
-
-# Start the Boss Battle
-boss_battle(player, boss)
-
 
 def start_game():
     parser = UserInputParser()
-    characters = [Character(f"Character_{i}") for i in range(3)]
+    character_classes =  [member.value for member in CharacterClass]
+    characters = [Character(f"{character_class}", CharacterClass(character_class)) for character_class in character_classes]
 
-# Load events for different eras & bosses
-    future_events = load_events_from_json('location_events/future.json', "Futuristic City")
-    ancient_events = load_events_from_json('location_events/ancient.json', "Ancient Civilization")
-    medieval_events = load_events_from_json('location_events/medieval.json', "Medieval Fantasy")
-   
-    future_boss = Boss({"primary_attribute": "Strength", "secondary_attribute": "Intelligence",
-                        "prompt_text": "A powerful AI guards the time machine piece.",
-                        "pass": {"message": "You overpowered the AI!"},
-                        "fail": {"message": "The AI overwhelms you."},
-                        "partial_pass": {"message": "The AI falters but regains control."}},
-                       reward="Future Circuit")
+    # Load events for different eras & bosses
+    boss_event_files = ['../location_events/future.json', '../location_events/ancient.json', '../location_events/medieval.json' ]
+    bosses: List[Boss] = [load_boss_from_json(file) for file in boss_event_files]
 
-    ancient_boss = Boss({"primary_attribute": "Intelligence", "secondary_attribute": "Dexterity",
-                         "prompt_text": "An ancient beast blocks the time portal.",
-                         "pass": {"message": "You outwit the beast and claim victory!"},
-                         "fail": {"message": "The beast is too strong."},
-                         "partial_pass": {"message": "The beast is momentarily deterred."}},
-                        reward="Ancient Artifact")
-
-    medieval_boss = Boss({"primary_attribute": "Dexterity", "secondary_attribute": "Vitality",
-                          "prompt_text": "A sorcerer guards the mystical piece of the machine.",
-                          "pass": {"message": "The sorcerer is defeated!"},
-                          "fail": {"message": "The sorcerer's power is overwhelming."},
-                          "partial_pass": {"message": "The sorcerer retreats but regroups."}},
-                         reward="Medieval Crystal")
-
-    locations = [Location("Futuristic City", future_events, future_boss),
-                 Location("Ancient Civilization", ancient_events, ancient_boss),
-                 Location("Medieval Fantasy", medieval_events, medieval_boss)]
+    locations = [Location(boss) for boss in bosses]
 
     game = Game(parser, characters, locations)
     game.start()

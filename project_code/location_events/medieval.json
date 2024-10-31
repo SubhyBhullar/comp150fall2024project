@@ -1,0 +1,15 @@
+{ "name": "Medieval Fantasy",
+  "primary_attribute": "Dexterity",
+  "secondary_attribute": "Vitality",
+  "prompt_text": "A sorcerer guards the mystical piece of the machine.",
+  "pass": {
+    "message": "The sorcerer is defeated!"
+  },
+  "fail": {
+    "message": "The sorcerer's power is overwhelming."
+  },
+  "partial_pass": {
+    "message": "The sorcerer retreats but regroups."
+  },
+  "reward": "Medieval Crystal"
+}
