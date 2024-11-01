@@ -46,7 +46,7 @@ class Character:
         self.health = 100
         self.inventory = []
 
-            # Set class-specific attributes
+        # Set class-specific attributes
         self.set_class_attributes()
 
     def __str__(self):
@@ -70,6 +70,18 @@ class Character:
             self.intelligence.modify(15)
             self.time_energy.modify(25)  # Time Keepers focus on manipulating time
 
+    def take_damage(self, damage):
+        # Calculate the damage taken after applying defense
+        actual_damage = max(damage - self.defense, 0)
+        self.health -= actual_damage
+        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
+
+    def use_ability(self, ability):
+        # Placeholder for ability usage logic
+        print(f"{self.name} uses {ability}!")
+
+    def is_alive(self):
+        return self.health > 0
     def get_stats(self):
         return [self.strength, self.intelligence, self.dexterity, self.vitality]  # Extend this list if there are more stats
 
@@ -213,17 +225,30 @@ class Boss(Event):
 
     def execute(self, party: List[Character], parser):
         print(f"Boss Encounter: {self.prompt_text}")
-        character = parser.select_party_member(party)
-        chosen_stat = parser.select_stat(character)
-        self.resolve_choice(character, chosen_stat)
-        if self.status == EventStatus.PASS:
-            print(f"You defeated the boss and obtained a time machine piece: {self.reward}!")
 
-        if self.status == EventStatus.PASS:
-            print(f"You defeated the boss and obtained a time machine piece: {self.reward}!")
-            return self.reward  # Return the reward if the boss is defeated
-        return None  # Return None if the boss was not defeated
-    
+        while True:
+            character = parser.select_party_member(party)
+
+            if not character.is_alive():
+                print(f"{character.name} has already fallen. Choose another member.")
+                continue  # Prompt again if the selected character is fallen
+
+            chosen_stat = parser.select_stat(character)
+            self.resolve_choice(character, chosen_stat)
+
+            if self.status == EventStatus.PASS:
+                print(f"You defeated the boss and obtained a time machine piece: {self.reward}!")
+                return self.reward  # Return the reward if the boss is defeated
+
+            elif self.status == EventStatus.FAIL:
+                print(f"The beast is too strong. {character.name} has fallen.")
+
+            # Break if all party members are defeated
+            if all(not member.is_alive() for member in party):
+                print("All party members have fallen. The boss remains undefeated.")
+                return False
+
+
 # Time portal mechanic: selecting events from different eras
 class Location:
     def __init__(self, boss_event: Boss, era: str=""):
@@ -239,6 +264,45 @@ class Location:
         self.boss_defeated = True
 
 
+# Define the FinalBoss class
+class FinalBoss:
+    def __init__(self, name="Dark Overlord", health=200, attack_power=25, defense=15):
+        self.name = name
+        self.health = health
+        self.max_health = health
+        self.attack = attack_power
+        self.defense = defense
+        self.special_abilities = {
+            "Time Warp": {"damage": 35, "cooldown": 3},  # Causes additional damage, has cooldown
+            "Heal": {"healing": 30, "cooldown": 5}       # Heals itself, has cooldown
+        }
+        self.ability_cooldowns = {key: 0 for key in self.special_abilities}  # Tracks ability cooldowns
+
+    def take_damage(self, damage):
+        # Calculate the damage taken after applying defense
+        actual_damage = max(damage - self.defense, 0)
+        self.health -= actual_damage
+        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
+
+    def use_ability(self):
+        # Logic for boss to use special abilities if off cooldown
+        if self.ability_cooldowns["Time Warp"] == 0:
+            self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
+            return "Time Warp", self.special_abilities["Time Warp"]["damage"]
+        elif self.ability_cooldowns["Heal"] == 0 and self.health < self.max_health * 0.5:
+            self.ability_cooldowns["Heal"] = self.special_abilities["Heal"]["cooldown"]
+            self.health = min(self.max_health, self.health + self.special_abilities["Heal"]["healing"])
+            return "Heal", self.special_abilities["Heal"]["healing"]
+        return "Basic Attack", self.attack
+
+    def update_cooldowns(self):
+        for ability in self.ability_cooldowns:
+            if self.ability_cooldowns[ability] > 0:
+                self.ability_cooldowns[ability] -= 1
+
+    def is_alive(self):
+        return self.health > 0
+
 
 class Game:
     def __init__(self, parser, characters: List[Character], locations: List[Location]):
@@ -247,25 +311,43 @@ class Game:
         self.locations = locations
         self.continue_playing = True
         self.time_machine_pieces = []
+        self.defeated_locations = []
 
     def start(self):
         while self.continue_playing:
+            # Filter out fallen characters before each encounter
+            self.party = [character for character in self.party if character.is_alive()]
+
+            if not self.party:  # Check if all characters have fallen
+                print("All characters have fallen. Game Over.")
+                break
 
             location = random.choice(self.locations)
-            # print("We got here?")
             event: Event = location.get_event()
-            # print("We got here?")
-            event.execute(self.party, self.parser)
-            # print("We got here?")
+
+            # Get the index of the randomly chosen location
+            location_index = self.locations.index(location)
+
+            if event.execute(self.party, self.parser):
+                # Pop the location by index if the event is defeated
+                self.defeated_locations.append(self.locations.pop(location_index))
+
             if isinstance(event, Boss) and event.status == EventStatus.PASS:
                 self.time_machine_pieces.append(event.reward)
                 location.defeat_boss()
+
             if self.check_game_over():
                 self.continue_playing = False
-        print("Game Over.")
+
+
+
 
     def check_game_over(self):
-        return len(self.party) == 0 or len(self.time_machine_pieces) == len(self.locations)
+        if len(self.party) == 0 :
+            print("Game Over.")
+        elif len(self.time_machine_pieces) == len(self.locations):
+            final_boss = FinalBoss()
+            boss_battle(self.party, final_boss)
 
 
 class UserInputParser:
@@ -273,16 +355,19 @@ class UserInputParser:
         return input(prompt)
 
     def select_party_member(self, party: List[Character]) -> Character:
+        alive_party = [member for member in party if member.is_alive()]
+
         while True:
-            for idx, member in enumerate(party):
+            for idx, member in enumerate(alive_party):
                 print(f"{idx + 1}. {member.name}")
             try:
                 choice = int(self.parse("Enter the number of the chosen party member: "))
-                if 0 < choice <= len(party):  # Ensure choice is positive
-                    return party[choice - 1]
+                if 0 < choice <= len(alive_party):  # Ensure choice is positive and within range
+                    return alive_party[choice - 1]
                 print("Invalid choice. Please enter a valid number.")
             except ValueError:
                 print("Invalid input. Please enter a number.")
+
 
     def select_stat(self, character: Character) -> Statistic:
         print(f"Choose a stat for {character.name}:")
@@ -325,107 +410,42 @@ def load_boss_from_json(file_name: str) -> Boss:
     return Boss(data)
 
 
-# Define the Player class
-class Player:
-    def __init__(self, name, health, attack, defense, abilities):
-        self.name = name
-        self.health = health
-        self.attack = attack
-        self.defense = defense
-        self.abilities = abilities
-    
-    def take_damage(self, damage):
-        # Calculate the damage taken after applying defense
-        actual_damage = max(damage - self.defense, 0)
-        self.health -= actual_damage
-        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
-    
-    def use_ability(self, ability):
-        # Placeholder for ability usage logic
-        print(f"{self.name} uses {ability}!")
-    
-    def is_alive(self):
-        return self.health > 0
+def boss_battle(party: List[Character], boss):
+    print(f"{boss.name} Battle! ")
 
-# Define three player characters
-player_0 = Player(name="Character_0", health=100, attack=15, defense=10, abilities=["Slash", "Heal"])
-player_1 = Player(name="Character_1", health=120, attack=10, defense=12, abilities=["Shield Bash", "Charge"])
-player_2 = Player(name="Character_2", health=90, attack=20, defense=8, abilities=["Stealth Attack", "Dodge"])
+    while any(player.is_alive() for player in party) and boss.is_alive():
+        # Filter the party to include only alive players
+        alive_party = [player for player in party if player.is_alive()]
 
-# Store characters in a list for selection
-players = [player_0, player_1, player_2]
+        # Loop over each alive player in the party
+        for player in alive_party:
+            if not boss.is_alive():
+                break  # Exit if the boss is defeated
 
-def choose_character():
-    print("Choose a party member:")
-    for idx, char in enumerate(players):
-        print(f"{idx + 1}. {char.name}")
-    choice = int(input("Enter the number of your choice: ")) - 1
-    return players[choice]
+            # Player turn
+            ability = player.abilities[0]  # Assume player uses the first ability for simplicity
+            print(f"{player.name}'s turn!")
+            player.use_ability(ability)
+            boss.take_damage(player.attack)
 
+            # Boss turn if still alive
+            if boss.is_alive():
+                boss_ability = boss.abilities[0]  # Boss also uses first ability for simplicity
+                print(f"{boss.name}'s turn!")
+                boss.use_ability(boss_ability)
+                player.take_damage(boss.attack)
 
+            # Check if the player was defeated during the boss's turn
+            if not player.is_alive():
+                print(f"{player.name} has fallen!")
 
-# Define the FinalBoss class
-class FinalBoss:
-    def __init__(self, name="Dark Overlord", health=200, attack_power=25, defense=15):
-        self.name = name
-        self.health = health
-        self.max_health = health
-        self.attack = attack_power
-        self.defense = defense
-        self.special_abilities = {
-            "Time Warp": {"damage": 35, "cooldown": 3},  # Causes additional damage, has cooldown
-            "Heal": {"healing": 30, "cooldown": 5}       # Heals itself, has cooldown
-        }
-        self.ability_cooldowns = {key: 0 for key in self.special_abilities}  # Tracks ability cooldowns
-    
-    def take_damage(self, damage):
-        # Calculate the damage taken after applying defense
-        actual_damage = max(damage - self.defense, 0)
-        self.health -= actual_damage
-        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
-    
-    def use_ability(self):
-        # Logic for boss to use special abilities if off cooldown
-        if self.ability_cooldowns["Time Warp"] == 0:
-            self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
-            return "Time Warp", self.special_abilities["Time Warp"]["damage"]
-        elif self.ability_cooldowns["Heal"] == 0 and self.health < self.max_health * 0.5:
-            self.ability_cooldowns["Heal"] = self.special_abilities["Heal"]["cooldown"]
-            self.health = min(self.max_health, self.health + self.special_abilities["Heal"]["healing"])
-            return "Heal", self.special_abilities["Heal"]["healing"]
-        return "Basic Attack", self.attack
-
-    def update_cooldowns(self):
-        for ability in self.ability_cooldowns:
-            if self.ability_cooldowns[ability] > 0:
-                self.ability_cooldowns[ability] -= 1
-
-    def is_alive(self):
-        return self.health > 0
-
-
-# Basic boss battle setup
-def boss_battle(player, boss):
-    print(f"Boss Battle! {player.name} vs. {boss.name}")
-    while player.is_alive() and boss.is_alive():
-        # Player turn
-        ability = player.abilities[0]  # Assume player uses the first ability for simplicity
-        print(f"{player.name}'s turn!")
-        player.use_ability(ability)
-        boss.take_damage(player.attack)
-        
-        # Boss turn if still alive
-        if boss.is_alive():
-            boss_ability = boss.abilities[0]  # Boss also uses first ability for simplicity
-            print(f"{boss.name}'s turn!")
-            boss.use_ability(boss_ability)
-            player.take_damage(boss.attack)
-    
     # Determine the outcome
-    if player.is_alive():
-        print(f"{player.name} has defeated {boss.name}!")
+    if any(player.is_alive() for player in party):
+        print(f"The party has defeated {boss.name}!")
     else:
-        print(f"{boss.name} has defeated {player.name}... Game Over!")
+        print(f"{boss.name} has defeated the party... Game Over!")
+
+
 
 
 def start_game():
