@@ -1,7 +1,7 @@
-{ "name": "Futuristic City",
+{ "name": "Ancient Civilization",
   "primary_attribute": "Intelligence",
   "secondary_attribute": "Dexterity",
-  "prompt_text": "An ancient beast blocks the time portal.",
+  "prompt_text": "Your party goes through a time portal and enter the Ancient Civilization. An ancient beast blocks the time portal.",
   "pass": {
     "message": "You outwit the beast and claim victory!"
   },

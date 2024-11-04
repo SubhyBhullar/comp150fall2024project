@@ -1,7 +1,7 @@
-{ "name": "Ancient Civilization",
+{ "name": "Futuristic City",
   "primary_attribute": "Strength",
   "secondary_attribute": "Intelligence",
-  "prompt_text": "A powerful AI guards the time machine piece.",
+  "prompt_text": "Your party goes through a time portal and enter the Futuristic City. A powerful AI guards the time machine piece.",
   "pass": {
     "message": "You overpowered the AI!"
   },
