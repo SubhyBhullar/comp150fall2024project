@@ -1,7 +1,6 @@
 import json
-import sys
 import random
-from typing import List, Optional
+from typing import List
 from enum import Enum
 import os
 
@@ -70,16 +69,6 @@ class Character:
             self.intelligence.modify(15)
             self.time_energy.modify(25)  # Time Keepers focus on manipulating time
 
-    def take_damage(self, damage):
-        # Calculate the damage taken after applying defense
-        actual_damage = max(damage - self.defense, 0)
-        self.health -= actual_damage
-        print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
-
-    def use_ability(self, ability):
-        # Placeholder for ability usage logic
-        print(f"{self.name} uses {ability}!")
-
     def is_alive(self):
         return self.health > 0
     def get_stats(self):
@@ -108,42 +97,7 @@ class Character:
             print(f"{self.name}'s attack missed!")
             return 0
             
-    def add_to_inventory(self, item: str):
-        """Add an item to the character's inventory."""
-        self.inventory.append(item)
-        print(f"{item} added to {self.name}'s inventory.")
-
-    def use_item(self, item: str):
-        """Use an item from the inventory."""
-        if item in self.inventory:
-            self.inventory.remove(item)
-            if item == "Potion":
-                self.health += 20  # Potions heal 20 HP
-                print(f"{self.name} used a Potion and healed 20 HP!")
-            elif item == "Sword":
-                print(f"{self.name} equips a Sword, increasing attack damage!")
-        else:
-            print(f"{item} not found in {self.name}'s inventory.")
             
-
-def combat(character1, character2):
-    """Simulate turn-based combat between two characters."""
-    print(f"Combat Start: {character1.name} vs {character2.name}")
-
-    while character1.health > 0 and character2.health > 0:
-        # Character 1 attacks
-        damage = character1.attack()
-        character2.take_damage(damage)
-        if character2.health <= 0:
-            print(f"{character2.name} has fallen! {character1.name} wins!")
-            break
-
-        # Character 2 attacks
-        damage = character2.attack()
-        character1.take_damage(damage)
-        if character1.health <= 0:
-            print(f"{character1.name} has fallen! {character2.name} wins!")
-            break
 
 class Event:
     def __init__(self, data: dict):
@@ -200,21 +154,6 @@ class Event:
             print(self.fail_message)
             # Apply damage to the character if they fail
             character.take_damage(10)
-
-# Inventory System
-class Inventory:
-    def __init__(self):
-        self.items = []
-
-    def add_item(self, item):
-        self.items.append(item)
-
-    def remove_item(self, item):
-        if item in self.items:
-            self.items.remove(item)
-
-    def __str__(self):
-        return ", ".join(self.items)
 
 
 
@@ -284,22 +223,6 @@ class FinalBoss:
         self.health -= actual_damage
         print(f"{self.name} takes {actual_damage} damage! Remaining health: {self.health}")
 
-    def use_ability(self):
-        # Logic for boss to use special abilities if off cooldown
-        if self.ability_cooldowns["Time Warp"] == 0:
-            self.ability_cooldowns["Time Warp"] = self.special_abilities["Time Warp"]["cooldown"]
-            return "Time Warp", self.special_abilities["Time Warp"]["damage"]
-        elif self.ability_cooldowns["Heal"] == 0 and self.health < self.max_health * 0.5:
-            self.ability_cooldowns["Heal"] = self.special_abilities["Heal"]["cooldown"]
-            self.health = min(self.max_health, self.health + self.special_abilities["Heal"]["healing"])
-            return "Heal", self.special_abilities["Heal"]["healing"]
-        return "Basic Attack", self.attack
-
-    def update_cooldowns(self):
-        for ability in self.ability_cooldowns:
-            if self.ability_cooldowns[ability] > 0:
-                self.ability_cooldowns[ability] -= 1
-
     def is_alive(self):
         return self.health > 0
 
@@ -338,9 +261,6 @@ class Game:
 
             if self.check_game_over():
                 self.continue_playing = False
-
-
-
 
     def check_game_over(self):
         if len(self.party) == 0 :
@@ -396,11 +316,6 @@ class UserInputParser:
                 print("Invalid choice. Please enter a valid number.")
             except ValueError:
                 print("Invalid input. Please enter a number.")
-
-
-# Add dice roll for random events
-def roll_dice(sides: int = 20) -> int:
-    return random.randint(1, sides)
 
 
 def load_boss_from_json(file_name: str) -> Boss:
