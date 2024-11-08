@@ -128,3 +128,5 @@ Here is the project directory structure:
 
 Enjoy your adventure!
 
+
+check out this chatgpt conversation for hints on how to get the existing project to work with the flask demo project: https://chatgpt.com/share/672d6adf-8398-8012-94f3-d789a2bda2ae
