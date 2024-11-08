@@ -1,0 +1,15 @@
+{ "name": "Boss Town",
+  "primary_attribute": "Intelligence",
+  "secondary_attribute": "Dexterity",
+  "prompt_text": "Boss battle",
+  "pass": {
+    "message": "You outwit the beast and claim victory!"
+  },
+  "fail": {
+    "message": "The beast is too strong."
+  },
+  "partial_pass": {
+    "message": "The beast is momentarily deterred."
+  },
+  "reward": "You win the game object"
+}
